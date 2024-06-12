@@ -1,7 +1,7 @@
 import {getProductsreducer} from "./Productsreducers";
-import {combinerReducers} from "redux";
+import { combineReducers } from "redux";
 
-const rootreducers = combinerReducers({
+const rootreducers = combineReducers({
     getProductsdata : getProductsreducer
 });
 
