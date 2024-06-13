@@ -6,30 +6,30 @@ const bcrypt = require("bcryptjs");
 const athenticate = require("../middleware/athenticate");
 
 //get productsdata api
-router.get("/getproducts",async(req,res)=>{
-    try{
-        
+router.get("/getproducts", async (req, res) => {
+    try {
+
         const productsdata = await Products.find();
         //console.log("Console the data "+productsdata);
         res.status(201).json(productsdata);
 
-    }catch(error){
-        console.log("error"+error.message);
+    } catch (error) {
+        console.log("error" + error.message);
     }
 });
 
 //get individual data
-router.get("/getproductsone/:id",async(req,res)=>{
-    try{
-        const {id} = req.params;
+router.get("/getproductsone/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
         //console.log(id);
-        const individualdata = await Products.findOne({id:id});
+        const individualdata = await Products.findOne({ id: id });
         //console.log(individualdata+ "individual data");
         res.status(201).json(individualdata);
-        
-    }catch(error){
+
+    } catch (error) {
         res.status(400).json(individualdata);
-        console.log("error"+error.message);
+        console.log("error" + error.message);
     }
 });
 
@@ -70,55 +70,56 @@ router.post("/register", async (req, res) => {
 });
 
 //login user api
-router.post("/login",async(req,res)=>{
-    const {email,password} = req.body;
+router.post("/login", async (req, res) => {
+    const { email, password } = req.body;
 
-    if(!email || !password){
-        res.status(400).json({error:"fill all the details"})
+    if (!email || !password) {
+        res.status(400).json({ error: "fill all the details" })
     }
     try {
-        const userLogin = await USER.findOne({email:email});
+        const userLogin = await USER.findOne({ email: email });
         //console.log(userLogin+"user value");
 
-        if(userLogin){
-            const isMatch = await  bcrypt.compare(password,userLogin.password);
+        if (userLogin) {
+            const isMatch = await bcrypt.compare(password, userLogin.password);
             //console.log(isMatch);
 
             //token generation 
-            const token = await userLogin.generateAuthToken();
-            //console.log(token);
 
-            res.cookie("Amazonweb",token,{
-                expires:new Date(Date.now() + 9000000),
-                httpOnly:true
-            })
 
-            if(!isMatch){
-                res.status(400).json({error:"Invalid details"});
-            }else{
-                res.status(201).json({message:"Password match"});
+            if (!isMatch) {
+                res.status(400).json({ error: "Invalid details" });
+            } else {
+                const token = await userLogin.generateAuthToken();
+                //console.log(token);
+
+                res.cookie("Amazonweb", token, {
+                    expires: new Date(Date.now() + 9000000),
+                    httpOnly: true
+                })
+                res.status(201).json({ message: "Password match" });
             }
-        }else{
-            res.status(400).json({message:"Invalid Details"});
+        } else {
+            res.status(400).json({ message: "Invalid Details" });
         }
 
     } catch (error) {
-        res.status(400).json({json:"Invalid details"});
+        res.status(400).json({ json: "Invalid details" });
     }
 })
 
 //adding data to cart api
 
-router.post("/addcart/:id",athenticate,async(req,res)=>{
+router.post("/addcart/:id", athenticate, async (req, res) => {
     try {
-        const {id} = req.params;
-        const cart = await Products.findOne({id:id});
-        console.log(cart +"cart value");
+        const { id } = req.params;
+        const cart = await Products.findOne({ id: id });
+        console.log(cart + "cart value");
 
-        const userContact = await USER.findOne({_id:req.userID});
+        const userContact = await USER.findOne({ _id: req.userID });
         console.log(userContact);
 
-        if(userContact){
+        if (userContact) {
             const cartData = await userContact.addcartdata(cart);
             await userContact.save();
             console.log(cartData);
@@ -126,14 +127,14 @@ router.post("/addcart/:id",athenticate,async(req,res)=>{
         }
 
     } catch (error) {
-        res.status(401).json({error:"Invalid User"});
+        res.status(401).json({ error: "Invalid User" });
     }
 });
 
 //get carts details
-router.get("/cartdetails",athenticate,async(req,res)=>{
+router.get("/cartdetails", athenticate, async (req, res) => {
     try {
-        const buyuser = await USER.findOne({_id:req.userID });
+        const buyuser = await USER.findOne({ _id: req.userID });
         res.status(201).json(buyuser);
     } catch (error) {
         console.log("error" + error)
@@ -141,9 +142,9 @@ router.get("/cartdetails",athenticate,async(req,res)=>{
 })
 
 //get valid user
-router.get("/validuser",athenticate,async(req,res)=>{
+router.get("/validuser", athenticate, async (req, res) => {
     try {
-        const validuserone = await USER.findOne({_id:req.userID });
+        const validuserone = await USER.findOne({ _id: req.userID });
         res.status(201).json(validuserone);
     } catch (error) {
         console.log("error" + error)
@@ -172,14 +173,14 @@ router.delete("/remove/:id", athenticate, async (req, res) => {
 
 //for user logout
 
-router.get("/logout",athenticate,(req,res)=>{
+router.get("/logout", athenticate, (req, res) => {
     try {
-        req.rootUser.tokens = req.rootUser.tokens.filter((curelem)=>{
+        req.rootUser.tokens = req.rootUser.tokens.filter((curelem) => {
             return curelem.token !== req.token
         });
 
 
-        res.clearCookie("Amazonweb",{path:"/"});
+        res.clearCookie("Amazonweb", { path: "/" });
 
         req.rootUser.save();
         res.status(201).json(req.rootUser.tokens);
