@@ -64,7 +64,7 @@ router.post("/register", async (req, res) => {
         }
 
     } catch (error) {
-        console.error(error.message); // Log any caught errors
+        //console.error(error.message); // Log any caught errors
         return res.status(500).json({ error: "Internal server error" });
     }
 });
